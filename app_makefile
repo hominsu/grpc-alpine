@@ -1,0 +1,52 @@
+AUTHOR_NAME="hominsu"
+AUTHOR_EMAIL="1774069959@qq.com"
+
+VERSION=$(shell git describe --tags --always)
+
+RELATIVE_PATH=$(shell a=`basename $$PWD` && echo $$a)
+
+REPO="hominsu"
+DOCKER_IMAGE=$(REPO)/$(shell echo $(RELATIVE_PATH) |awk -F '@' '{print "grpc-alpine:alpine" "$(VERSION)-" $$0}')
+
+.PHONY: docker
+# build docker images
+docker:
+	cd ../../ && \
+	docker build \
+	--build-arg AUTHOR_NAME=$(AUTHOR_NAME) \
+	--build-arg AUTHOR_EMAIL=$(AUTHOR_EMAIL) \
+	--build-arg VERSION=$(VERSION) \
+	--file app/$(RELATIVE_PATH)/Dockerfile \
+	--tag $(DOCKER_IMAGE) .
+
+.PHONY: buildx
+# build the multi-platform images
+buildx:
+	cd ../../ && \
+	docker buildx build \
+	--build-arg AUTHOR_NAME=$(AUTHOR_NAME) \
+	--build-arg AUTHOR_EMAIL=$(AUTHOR_EMAIL) \
+	--build-arg VERSION=$(VERSION) \
+	--file app/$(RELATIVE_PATH)/Dockerfile \
+	--platform=linux/arm64,linux/amd64,linux/arm \
+	--push \
+	--tag $(DOCKER_IMAGE) .
+
+# show help
+help:
+	@echo ''
+	@echo 'Usage:'
+	@echo ' make [target]'
+	@echo ''
+	@echo 'Targets:'
+	@awk '/^[a-zA-Z\-\_0-9]+:/ { \
+	helpMessage = match(lastLine, /^# (.*)/); \
+		if (helpMessage) { \
+			helpCommand = substr($$1, 0, index($$1, ":")-1); \
+			helpMessage = substr(lastLine, RSTART + 2, RLENGTH); \
+			printf "\033[36m%-22s\033[0m %s\n", helpCommand,helpMessage; \
+		} \
+	} \
+	{ lastLine = $$0 }' $(MAKEFILE_LIST)
+
+.DEFAULT_GOAL := help
