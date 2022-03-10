@@ -5,5 +5,5 @@ ARG VERSION
 
 FROM alpine:$VERSION
 LABEL author=$AUTHOR_NAME email=${AUTHOR_EMAIL} version=$VERSION
-# install: tzdata c-ares libprotobuf
-RUN apk --no-cache add c-ares libprotobuf
+# install: c-ares libprotobuf
+RUN apk --no-cache add c-ares libprotobuf grpc
